@@ -121,7 +121,7 @@
 --- AI_CAS_ZONE class
 -- @type AI_CAS_ZONE
 -- @field Wrapper.Controllable#CONTROLLABLE AIControllable The @{Controllable} patrolling.
--- @field Core.Zone#ZONE_BASE TargetZone The @{Zone} where the patrol needs to be executed.
+-- @field Core.Zone#ZONE_BASE EngageZone The @{Zone} where the patrol needs to be executed.
 -- @extends AI.AI_Patrol#AI_PATROL_ZONE
 AI_CAS_ZONE = {
   ClassName = "AI_CAS_ZONE",
@@ -454,9 +454,37 @@ function AI_CAS_ZONE:onafterEngage( Controllable, From, Event, To, EngageSpeed, 
   
     if self.Controllable:IsNotInZone( self.EngageZone ) then
 
+      -- Find a path towards the engage zone with multiple waypoints, while keep los between the points.
+      
       -- Find a random 2D point in EngageZone.
       local ToEngageZoneVec2 = self.EngageZone:GetRandomVec2()
+      local ToEngageZonePointVec3 = POINT_VEC3:New( ToEngageZoneVec2.x, math.random( self.PatrolFloorAltitude, self.PatrolCeilingAltitude ), ToEngageZoneVec2.y )
       self:T2( ToEngageZoneVec2 )
+      
+      local RouteFound = false
+      local PreviousPointVec3 = CurrentPointVec3
+      local PreviousDistance = ToEngageZonePointVec3:Get2DDistance( PreviousPointVec3 )
+      
+      while( RouteFound ) do
+      
+        -- Obtain a new point towards the engage zone. A radius of 5000 meters is used to find a point closer than the previous point to the engage zone.
+        local CloserPointVec2 = PreviousPointVec3:GetRandomPointVec2InRadius( 5000, 1000 )
+        local CloserDistance = ToEngageZonePointVec3:Get2DDistance( CloserPointVec2 )
+        
+        if self.EngageZone:IsPointVec2InZone( CloserPointVec2 ) then
+          RouteFound = true
+        else
+          if CloserDistance < PreviousDistance then
+            
+          
+        -- Obtain a 3D @{Point} from the 2D point + random altitude.
+        local ToEngageZonePointVec3 = POINT_VEC3:New( ToEngageZoneVec2.x, math.random( self.PatrolFloorAltitude, self.PatrolCeilingAltitude ), ToEngageZoneVec2.y )
+        
+        if ToEngageZonePointVec3:Get2DDistance( PreviousVec3 ) then
+        end
+        
+                
+      end
       
       -- Obtain a 3D @{Point} from the 2D point + altitude.
       local ToEngageZonePointVec3 = POINT_VEC3:New( ToEngageZoneVec2.x, self.EngageAltitude, ToEngageZoneVec2.y )

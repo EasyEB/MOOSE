@@ -405,9 +405,9 @@ function AI_PATROL_ZONE:New( PatrolZone, PatrolFloorAltitude, PatrolCeilingAltit
 
   self:AddTransition( "*", "Reset", "Patrolling" ) -- FSM_CONTROLLABLE Transition for type #AI_PATROL_ZONE.
   
-  self:AddTransition( "*", "Eject", "Ejected" )
+  self:AddTransition( "*", "Eject", "*" )
   self:AddTransition( "*", "Crash", "Crashed" )
-  self:AddTransition( "*", "PilotDead", "PilotDead" )
+  self:AddTransition( "*", "PilotDead", "*" )
   
   return self
 end
@@ -591,9 +591,9 @@ function AI_PATROL_ZONE:onafterStart( Controllable, From, Event, To )
   self:__Status( 60 ) -- Check status status every 30 seconds.
   self:SetDetectionActivated()
   
-  self:HandleEvent( EVENTS.PilotDead, self.OnPilotDead )
-  self:HandleEvent( EVENTS.Crash, self.OnCrash )
-  self:HandleEvent( EVENTS.Ejection, self.OnEjection )
+  self:HandleEvent( EVENTS.PilotDead )
+  self:HandleEvent( EVENTS.Crash )
+  self:HandleEvent( EVENTS.Ejection )
   
   Controllable:OptionROEHoldFire()
   Controllable:OptionROTVertical()
@@ -862,16 +862,19 @@ end
 
 --- @param #AI_PATROL_ZONE self
 -- @param Core.Event#EVENTDATA EventData
-function AI_PATROL_ZONE:OnCrash( EventData )
+function AI_PATROL_ZONE:OnEventCrash( EventData )
 
   if self.Controllable:IsAlive() and EventData.IniDCSGroupName == self.Controllable:GetName() then
-    self:__Crash( 1, EventData )
+    self:E( self.Controllable:GetUnits() )
+    if #self.Controllable:GetUnits() == 1 then
+      self:__Crash( 1, EventData )
+    end
   end
 end
 
 --- @param #AI_PATROL_ZONE self
 -- @param Core.Event#EVENTDATA EventData
-function AI_PATROL_ZONE:OnEjection( EventData )
+function AI_PATROL_ZONE:OnEventEjection( EventData )
 
   if self.Controllable:IsAlive() and EventData.IniDCSGroupName == self.Controllable:GetName() then
     self:__Eject( 1, EventData )
@@ -880,7 +883,7 @@ end
 
 --- @param #AI_PATROL_ZONE self
 -- @param Core.Event#EVENTDATA EventData
-function AI_PATROL_ZONE:OnPilotDead( EventData )
+function AI_PATROL_ZONE:OnEventPilotDead( EventData )
 
   if self.Controllable:IsAlive() and EventData.IniDCSGroupName == self.Controllable:GetName() then
     self:__PilotDead( 1, EventData )
